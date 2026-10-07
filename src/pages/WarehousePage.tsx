@@ -587,6 +587,101 @@ export function WarehousePage({
           </div>
         </div>
       )}
+
+      {/* Modal: Add Inventory Item */}
+      {showItemModal && (
+        <div className="modal-backdrop" onMouseDown={() => setShowItemModal(false)}>
+          <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <p className="eyebrow">PREPOSITIONED INVENTORY</p>
+                <h2>Add Inventory Item</h2>
+              </div>
+              <button className="icon-button" onClick={() => setShowItemModal(false)}>
+                <Icon name="close" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateItem} className="incident-form">
+              <div className="form-grid">
+                <label>
+                  <span>Item Name</span>
+                  <input
+                    type="text"
+                    value={newItemName}
+                    onChange={(e) => setNewItemName(e.target.value)}
+                    placeholder="e.g. Standard Family Food Pack"
+                    required
+                  />
+                </label>
+                <label>
+                  <span>Category</span>
+                  <select
+                    value={newItemCategory}
+                    onChange={(e) => setNewItemCategory(e.target.value as InventoryCategory)}
+                  >
+                    <option value="Food">Food</option>
+                    <option value="Hygiene">Hygiene</option>
+                    <option value="Water">Water</option>
+                    <option value="Medical">Medical</option>
+                    <option value="Shelter">Shelter</option>
+                    <option value="Clothing">Clothing</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Initial Quantity</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={newItemQty}
+                    onChange={(e) => setNewItemQty(Number(e.target.value))}
+                    required
+                  />
+                </label>
+                <label>
+                  <span>Unit of Measurement</span>
+                  <input
+                    type="text"
+                    value={newItemUnit}
+                    onChange={(e) => setNewItemUnit(e.target.value)}
+                    placeholder="packs, kits, units, boxes, etc."
+                    required
+                  />
+                </label>
+                <label>
+                  <span>Minimum Safety Threshold</span>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newItemThreshold}
+                    onChange={(e) => setNewItemThreshold(Number(e.target.value))}
+                    required
+                  />
+                </label>
+                <label>
+                  <span>Expiry Date (Optional)</span>
+                  <input
+                    type="date"
+                    value={newItemExpiry}
+                    onChange={(e) => setNewItemExpiry(e.target.value)}
+                  />
+                </label>
+              </div>
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setShowItemModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="primary-button">
+                  Save Inventory Item
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

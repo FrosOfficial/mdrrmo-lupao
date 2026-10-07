@@ -10,6 +10,7 @@ interface TopbarProps {
   notify: (msg: string) => void;
   lastSync: string;
   setLastSync: (s: string) => void;
+  onClearData?: () => void;
 }
 
 export function Topbar({
@@ -20,6 +21,7 @@ export function Topbar({
   notify,
   lastSync,
   setLastSync,
+  onClearData,
 }: TopbarProps) {
   const { user } = useAuth();
   const isReadOnly = user?.role === "Municipal Official";
@@ -63,6 +65,20 @@ export function Topbar({
             <small>SYNCED</small>
             <strong>{lastSync}</strong>
           </div>
+        </button>
+
+        <button
+          className="secondary-button"
+          style={{ height: "36px", padding: "0 10px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+          onClick={() => {
+            if (window.confirm("Clear all data to test with a clean blank slate?")) {
+              onClearData?.();
+            }
+          }}
+          title="Wipe data to start fresh"
+        >
+          <Icon name="refresh" size={13} />
+          <span>Clear Data</span>
         </button>
 
         <button

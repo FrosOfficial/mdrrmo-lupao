@@ -40,19 +40,30 @@ import { AuditLogPage } from "./pages/AuditLogPage";
 function MainAppShell() {
   const { user } = useAuth();
 
-  // All 12 ERD entities persisted in localStorage
-  const [incidents, setIncidents] = useLocalStorage<Incident[]>("lupao-incidents", INITIAL_INCIDENTS);
-  const [batches, setBatches] = useLocalStorage<ReliefBatch[]>("lupao-batches", INITIAL_BATCHES);
-  const [requests, setRequests] = useLocalStorage<ReliefRequest[]>("lupao-requests", INITIAL_RELIEF_REQUESTS);
-  const [inventory, setInventory] = useLocalStorage<InventoryItem[]>("lupao-inventory", INITIAL_INVENTORY);
-  const [donations, setDonations] = useLocalStorage<Donation[]>("lupao-donations", INITIAL_DONATIONS);
-  const [households, setHouseholds] = useLocalStorage<Household[]>("lupao-households", INITIAL_HOUSEHOLDS);
+  // All 12 ERD entities persisted in localStorage with clean state
+  const [incidents, setIncidents] = useLocalStorage<Incident[]>("lupao-clean-incidents", INITIAL_INCIDENTS);
+  const [batches, setBatches] = useLocalStorage<ReliefBatch[]>("lupao-clean-batches", INITIAL_BATCHES);
+  const [requests, setRequests] = useLocalStorage<ReliefRequest[]>("lupao-clean-requests", INITIAL_RELIEF_REQUESTS);
+  const [inventory, setInventory] = useLocalStorage<InventoryItem[]>("lupao-clean-inventory", INITIAL_INVENTORY);
+  const [donations, setDonations] = useLocalStorage<Donation[]>("lupao-clean-donations", INITIAL_DONATIONS);
+  const [households, setHouseholds] = useLocalStorage<Household[]>("lupao-clean-households", INITIAL_HOUSEHOLDS);
   const [distributions, setDistributions] = useLocalStorage<BeneficiaryDistribution[]>(
-    "lupao-distributions",
+    "lupao-clean-distributions",
     INITIAL_DISTRIBUTIONS
   );
 
   const { logs, addLog, setLogs } = useAuditLog(user);
+
+  const handleClearAllData = () => {
+    setIncidents([]);
+    setBatches([]);
+    setRequests([]);
+    setDonations([]);
+    setHouseholds([]);
+    setDistributions([]);
+    setLogs([]);
+    notify("All records cleared. System is now a clean blank slate.");
+  };
 
   // App UI state with hash-based route synchronization
   const getNavFromHash = (hash: string): string => {
@@ -250,6 +261,7 @@ function MainAppShell() {
           notify={notify}
           lastSync={lastSync}
           setLastSync={setLastSync}
+          onClearData={handleClearAllData}
         />
 
         {activeNav === "Command Center" && (

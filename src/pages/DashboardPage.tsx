@@ -32,7 +32,7 @@ export function DashboardPage({
   const { user } = useAuth();
   const stages = ["Allocated", "In Transit", "Received", "Distributed"] as const;
 
-  const totalFamilies = incidents.reduce((sum, item) => sum + item.families, 1042);
+  const totalFamilies = incidents.reduce((sum, item) => sum + item.families, 0);
   const activeIncidentsCount = incidents.filter((i) => i.status !== "Resolved").length;
   const inTransitCount = batches.filter((b) => b.stage === "In Transit").length;
   
@@ -63,21 +63,21 @@ export function DashboardPage({
     {
       name: "Family food packs",
       item: foodPackItem,
-      quantity: foodPackItem?.quantity ?? 450,
+      quantity: foodPackItem?.quantity ?? 0,
       targetMax: 600,
       dotClass: "dot-0",
     },
     {
       name: "Hygiene kits",
       item: hygieneItem,
-      quantity: hygieneItem?.quantity ?? 280,
+      quantity: hygieneItem?.quantity ?? 0,
       targetMax: 400,
       dotClass: "dot-1",
     },
     {
       name: "Water containers",
       item: waterItem,
-      quantity: waterItem?.quantity ?? 12,
+      quantity: waterItem?.quantity ?? 0,
       targetMax: 60,
       dotClass: "dot-2",
     },
@@ -126,21 +126,21 @@ export function DashboardPage({
           icon="alert"
           label="Affected families"
           value={totalFamilies.toLocaleString()}
-          detail="+124 in the last 24 hours"
+          detail={`${totalFamilies} reported across barangays`}
           tone="blue"
         />
         <MetricCard
           icon="radio"
           label="Active incidents"
           value={String(activeIncidentsCount)}
-          detail="3 marked critical severity"
+          detail={`${incidents.filter((i) => i.severity === "Critical").length} critical severity`}
           tone="red"
         />
         <MetricCard
           icon="truck"
           label="Batches in transit"
-          value={String(inTransitCount + 2)}
-          detail="Dispatched to evacuation hubs"
+          value={String(inTransitCount)}
+          detail={`${batches.length} total batches dispatched`}
           tone="amber"
         />
         <MetricCard
@@ -196,9 +196,9 @@ export function DashboardPage({
             })}
             {filteredIncidents.length === 0 && (
               <div className="empty-state">
-                <Icon name="search" />
-                <strong>No matching reports</strong>
-                <span>Try a barangay or hazard name.</span>
+                <Icon name="checkCircle" />
+                <strong>No active incident reports</strong>
+                <span>Use "Log field incident" to submit a new report.</span>
               </div>
             )}
           </div>
@@ -320,6 +320,13 @@ export function DashboardPage({
                 </div>
               );
             })}
+            {batches.length === 0 && (
+              <div className="empty-state" style={{ padding: "28px 16px", textAlign: "center" }}>
+                <Icon name="truck" />
+                <strong>No active relief batches</strong>
+                <span>Dispatch a new relief batch to start tracking.</span>
+              </div>
+            )}
           </div>
         </section>
 

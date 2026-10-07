@@ -34,10 +34,10 @@ export function ReliefTrackingPage({
   // New dispatch batch form state
   const [destBarangay, setDestBarangay] = useState("San Roque");
   const [destEvacCenter, setDestEvacCenter] = useState(EVACUATION_CENTERS[0]);
-  const [vehiclePlate, setVehiclePlate] = useState("SAA-4821");
-  const [driverName, setDriverName] = useState("Arnel P. Soriano");
-  const [selectedItemId, setSelectedItemId] = useState(inventory[0]?.id || "INV-001");
-  const [itemQuantity, setItemQuantity] = useState(50);
+  const [vehiclePlate, setVehiclePlate] = useState("");
+  const [driverName, setDriverName] = useState("");
+  const [selectedItemId, setSelectedItemId] = useState(inventory[0]?.id || "");
+  const [itemQuantity, setItemQuantity] = useState(25);
 
   const filteredBatches = batches.filter((b) => {
     if (filterStage !== "all" && b.stage !== filterStage) return false;
@@ -357,12 +357,16 @@ export function ReliefTrackingPage({
                     value={selectedItemId}
                     onChange={(e) => setSelectedItemId(e.target.value)}
                     required
+                    disabled={inventory.length === 0}
                   >
                     {inventory.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.name} ({item.quantity} {item.unit} available)
                       </option>
                     ))}
+                    {inventory.length === 0 && (
+                      <option value="">No stock available in warehouse</option>
+                    )}
                   </select>
                 </label>
                 <label>

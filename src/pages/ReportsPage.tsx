@@ -24,7 +24,7 @@ export function ReportsPage({
   const [reportType, setReportType] = useState<"dromic" | "pdrrmo">("dromic");
   const [period, setPeriod] = useState("24-hours");
 
-  const totalFamilies = incidents.reduce((sum, item) => sum + item.families, 1042);
+  const totalFamilies = incidents.reduce((sum, item) => sum + item.families, 0);
   const totalStock = inventory.reduce((sum, i) => sum + i.quantity, 0);
   const distributedBatches = batches.filter((b) => b.stage === "Distributed").length;
   const inTransitBatches = batches.filter((b) => b.stage === "In Transit").length;

@@ -32,8 +32,8 @@ export function VerificationPage({
     if (window.location.hash.includes("reception")) return "barangay-reception";
     return "beneficiary-handout";
   });
-  const [inputCode, setInputCode] = useState("QR-HH-LUP-001");
-  const [selectedBatchId, setSelectedBatchId] = useState(batches[0]?.id || "LUP-26049");
+  const [inputCode, setInputCode] = useState(households[0]?.qrCode || "");
+  const [selectedBatchId, setSelectedBatchId] = useState(batches[0]?.id || "");
   const [lastVerifiedMessage, setLastVerifiedMessage] = useState<string | null>(null);
 
   const handleVerify = (codeToVerify?: string) => {
@@ -225,6 +225,9 @@ export function VerificationPage({
                       {b.id} - Brgy. {b.barangay} ({b.contents})
                     </option>
                   ))}
+                  {batches.length === 0 && (
+                    <option value="">No dispatched batches available</option>
+                  )}
                 </select>
               </div>
             )}
@@ -254,62 +257,45 @@ export function VerificationPage({
             <div className="quick-test-chips">
               <small>Click sample to test:</small>
               {mode === "beneficiary-handout" ? (
-                <>
-                  <button
-                    type="button"
-                    className="chip-btn"
-                    onClick={() => {
-                      setInputCode("QR-HH-LUP-001");
-                      handleVerify("QR-HH-LUP-001");
-                    }}
-                  >
-                    Juan Dela Cruz (Unclaimed)
-                  </button>
-                  <button
-                    type="button"
-                    className="chip-btn"
-                    onClick={() => {
-                      setInputCode("QR-HH-LUP-002");
-                      handleVerify("QR-HH-LUP-002");
-                    }}
-                  >
-                    Maria Santos (Unclaimed)
-                  </button>
-                  <button
-                    type="button"
-                    className="chip-btn chip-warn"
-                    onClick={() => {
-                      setInputCode("QR-HH-LUP-003");
-                      handleVerify("QR-HH-LUP-003");
-                    }}
-                    title="Tests FR-11 duplicate prevention"
-                  >
-                    Antonio Reyes (Already Claimed)
-                  </button>
-                </>
+                households.length > 0 ? (
+                  households.slice(0, 3).map((h) => (
+                    <button
+                      key={h.id}
+                      type="button"
+                      className={`chip-btn ${h.status === "Claimed" ? "chip-warn" : ""}`}
+                      onClick={() => {
+                        setInputCode(h.qrCode);
+                        handleVerify(h.qrCode);
+                      }}
+                    >
+                      {h.headOfFamily} ({h.status})
+                    </button>
+                  ))
+                ) : (
+                  <span style={{ fontSize: "12px", color: "var(--text-sub)", fontStyle: "italic" }}>
+                    No households registered yet. Register a household in Beneficiaries tab.
+                  </span>
+                )
               ) : (
-                <>
-                  <button
-                    type="button"
-                    className="chip-btn"
-                    onClick={() => {
-                      setInputCode("LUP-26048");
-                      handleVerify("LUP-26048");
-                    }}
-                  >
-                    Batch LUP-26048 (San Roque)
-                  </button>
-                  <button
-                    type="button"
-                    className="chip-btn"
-                    onClick={() => {
-                      setInputCode("LUP-26045");
-                      handleVerify("LUP-26045");
-                    }}
-                  >
-                    Batch LUP-26045 (Burgos)
-                  </button>
-                </>
+                batches.length > 0 ? (
+                  batches.slice(0, 3).map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      className="chip-btn"
+                      onClick={() => {
+                        setInputCode(b.id);
+                        handleVerify(b.id);
+                      }}
+                    >
+                      Batch {b.id} ({b.barangay})
+                    </button>
+                  ))
+                ) : (
+                  <span style={{ fontSize: "12px", color: "var(--text-sub)", fontStyle: "italic" }}>
+                    No batches dispatched yet. Create a batch in Relief Tracking.
+                  </span>
+                )
               )}
             </div>
 
