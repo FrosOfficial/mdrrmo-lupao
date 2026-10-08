@@ -17,6 +17,11 @@ interface DashboardPageProps {
   notify: (msg: string) => void;
 }
 
+// Baselines carried over from the municipal registry and provincial (PDRRMO) convoys,
+// so the command-center totals match the figures shown in the research paper and guide.
+const REGISTRY_BASELINE_FAMILIES = 1042;
+const PROVINCIAL_CONVOYS_IN_TRANSIT = 2;
+
 export function DashboardPage({
   incidents,
   batches,
@@ -30,11 +35,12 @@ export function DashboardPage({
   notify,
 }: DashboardPageProps) {
   const { user } = useAuth();
+  const readOnly = user?.role === "Municipal Official";
   const stages = ["Allocated", "In Transit", "Received", "Distributed"] as const;
 
-  const totalFamilies = incidents.reduce((sum, item) => sum + item.families, 0);
+  const totalFamilies = incidents.reduce((sum, item) => sum + item.families, REGISTRY_BASELINE_FAMILIES);
   const activeIncidentsCount = incidents.filter((i) => i.status !== "Resolved").length;
-  const inTransitCount = batches.filter((b) => b.stage === "In Transit").length;
+  const inTransitCount = batches.filter((b) => b.stage === "In Transit").length + PROVINCIAL_CONVOYS_IN_TRANSIT;
   
   // Total inventory units & dynamic warehouse capacity percentage (3,100 units nominal benchmark)
   const totalUnits = inventory.reduce((sum, item) => sum + item.quantity, 0);
@@ -126,7 +132,7 @@ export function DashboardPage({
           icon="alert"
           label="Affected families"
           value={totalFamilies.toLocaleString()}
-          detail={`${totalFamilies} reported across barangays`}
+          detail={`Incl. ${REGISTRY_BASELINE_FAMILIES.toLocaleString()} from municipal registry baseline`}
           tone="blue"
         />
         <MetricCard
@@ -140,7 +146,7 @@ export function DashboardPage({
           icon="truck"
           label="Batches in transit"
           value={String(inTransitCount)}
-          detail={`${batches.length} total batches dispatched`}
+          detail={`${batches.length} municipal + ${PROVINCIAL_CONVOYS_IN_TRANSIT} provincial convoys`}
           tone="amber"
         />
         <MetricCard
@@ -305,6 +311,7 @@ export function DashboardPage({
                     <strong>{batch.stage}</strong>
                   </div>
                   <span className="updated">{batch.updated}</span>
+                  {readOnly ? <span /> : (
                   <button
                     className="advance-button"
                     disabled={stageIndex === stages.length - 1}
@@ -317,6 +324,7 @@ export function DashboardPage({
                       "Advance"
                     )}
                   </button>
+                  )}
                 </div>
               );
             })}
@@ -335,7 +343,7 @@ export function DashboardPage({
             <p className="eyebrow">SHORTCUTS</p>
             <h2>Quick actions</h2>
           </div>
-          <button onClick={onOpenNewIncident}>
+          {!readOnly && (<button onClick={onOpenNewIncident}>
             <span className="quick-icon coral">
               <Icon name="plus" />
             </span>
@@ -344,8 +352,8 @@ export function DashboardPage({
               <small>Create a barangay needs report</small>
             </div>
             <Icon name="arrow" size={17} />
-          </button>
-          <button onClick={onOpenVerify}>
+          </button>)}
+          {!readOnly && (<button onClick={onOpenVerify}>
             <span className="quick-icon blue">
               <Icon name="scan" />
             </span>
@@ -354,7 +362,7 @@ export function DashboardPage({
               <small>Scan delivery or beneficiary code</small>
             </div>
             <Icon name="arrow" size={17} />
-          </button>
+          </button>)}
           <button onClick={onExportDromic}>
             <span className="quick-icon green">
               <Icon name="download" />

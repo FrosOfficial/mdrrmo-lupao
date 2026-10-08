@@ -1,6 +1,7 @@
 import React from "react";
 import { Icon } from "./Icon";
 import { useAuth } from "../hooks/useAuth";
+import { canSubmitIncident, isAdmin } from "../data/permissions";
 
 interface TopbarProps {
   query: string;
@@ -11,6 +12,7 @@ interface TopbarProps {
   lastSync: string;
   setLastSync: (s: string) => void;
   onClearData?: () => void;
+  onRestoreData?: () => void;
 }
 
 export function Topbar({
@@ -22,6 +24,7 @@ export function Topbar({
   lastSync,
   setLastSync,
   onClearData,
+  onRestoreData,
 }: TopbarProps) {
   const { user } = useAuth();
   const isReadOnly = user?.role === "Municipal Official";
@@ -67,6 +70,8 @@ export function Topbar({
           </div>
         </button>
 
+        {user && isAdmin(user.role) && (
+          <>
         <button
           className="secondary-button"
           style={{ height: "36px", padding: "0 10px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
@@ -82,6 +87,23 @@ export function Topbar({
         </button>
 
         <button
+          className="secondary-button"
+          style={{ height: "36px", padding: "0 10px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+          onClick={() => {
+            if (window.confirm("Restore the full demo dataset (replaces current records)?")) {
+              onRestoreData?.();
+            }
+          }}
+          title="Reload the sample disaster scenario"
+        >
+          <Icon name="refresh" size={13} />
+          <span>Restore Demo</span>
+        </button>
+
+          </>
+        )}
+
+        <button
           className="icon-button notification"
           aria-label="Notifications"
           onClick={() => notify("Notification: 3 pending validation reports from San Roque & Balbalungao")}
@@ -90,7 +112,7 @@ export function Topbar({
           <i />
         </button>
 
-        {!isReadOnly && (
+        {user && canSubmitIncident(user.role) && (
           <button className="primary-button" onClick={onNewIncident}>
             <Icon name="plus" size={18} />
             <span>New incident</span>

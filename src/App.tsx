@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { canAccessPage, homePage, PageName } from "./data/permissions";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useAuditLog } from "./hooks/useAuditLog";
 import {
@@ -19,6 +20,7 @@ import {
   INITIAL_DONATIONS,
   INITIAL_HOUSEHOLDS,
   INITIAL_DISTRIBUTIONS,
+  INITIAL_AUDIT_LOGS,
 } from "./data/mock-data";
 
 import { Sidebar } from "./components/Sidebar";
@@ -41,14 +43,14 @@ function MainAppShell() {
   const { user } = useAuth();
 
   // All 12 ERD entities persisted in localStorage with clean state
-  const [incidents, setIncidents] = useLocalStorage<Incident[]>("lupao-clean-incidents", INITIAL_INCIDENTS);
-  const [batches, setBatches] = useLocalStorage<ReliefBatch[]>("lupao-clean-batches", INITIAL_BATCHES);
-  const [requests, setRequests] = useLocalStorage<ReliefRequest[]>("lupao-clean-requests", INITIAL_RELIEF_REQUESTS);
-  const [inventory, setInventory] = useLocalStorage<InventoryItem[]>("lupao-clean-inventory", INITIAL_INVENTORY);
-  const [donations, setDonations] = useLocalStorage<Donation[]>("lupao-clean-donations", INITIAL_DONATIONS);
-  const [households, setHouseholds] = useLocalStorage<Household[]>("lupao-clean-households", INITIAL_HOUSEHOLDS);
+  const [incidents, setIncidents] = useLocalStorage<Incident[]>("lupao-demo-incidents", INITIAL_INCIDENTS);
+  const [batches, setBatches] = useLocalStorage<ReliefBatch[]>("lupao-demo-batches", INITIAL_BATCHES);
+  const [requests, setRequests] = useLocalStorage<ReliefRequest[]>("lupao-demo-requests", INITIAL_RELIEF_REQUESTS);
+  const [inventory, setInventory] = useLocalStorage<InventoryItem[]>("lupao-demo-inventory", INITIAL_INVENTORY);
+  const [donations, setDonations] = useLocalStorage<Donation[]>("lupao-demo-donations", INITIAL_DONATIONS);
+  const [households, setHouseholds] = useLocalStorage<Household[]>("lupao-demo-households", INITIAL_HOUSEHOLDS);
   const [distributions, setDistributions] = useLocalStorage<BeneficiaryDistribution[]>(
-    "lupao-clean-distributions",
+    "lupao-demo-distributions",
     INITIAL_DISTRIBUTIONS
   );
 
@@ -63,6 +65,18 @@ function MainAppShell() {
     setDistributions([]);
     setLogs([]);
     notify("All records cleared. System is now a clean blank slate.");
+  };
+
+  const handleRestoreDemoData = () => {
+    setIncidents(INITIAL_INCIDENTS);
+    setBatches(INITIAL_BATCHES);
+    setRequests(INITIAL_RELIEF_REQUESTS);
+    setInventory(INITIAL_INVENTORY);
+    setDonations(INITIAL_DONATIONS);
+    setHouseholds(INITIAL_HOUSEHOLDS);
+    setDistributions(INITIAL_DISTRIBUTIONS);
+    setLogs(INITIAL_AUDIT_LOGS);
+    notify("Demo dataset restored.");
   };
 
   // App UI state with hash-based route synchronization
@@ -118,6 +132,13 @@ function MainAppShell() {
     window.addEventListener("hashchange", handleHash);
     return () => window.removeEventListener("hashchange", handleHash);
   }, []);
+
+  // RBAC route guard: send users to a page their role may open
+  useEffect(() => {
+    if (user && !canAccessPage(user.role, activeNav as PageName)) {
+      setActiveNav(homePage(user.role));
+    }
+  }, [user, activeNav]);
 
   const [mobileNav, setMobileNav] = useState(false);
   const [toast, setToast] = useState("");
@@ -231,6 +252,12 @@ function MainAppShell() {
     addLog("Report Exported", "Reports & DROMIC", "Exported DROMIC Situation Report");
   };
 
+  const isBrgyOfficial = user?.role === "Barangay Official" && !!user.barangay;
+  const scopedIncidents = isBrgyOfficial ? incidents.filter((i) => i.barangay === user!.barangay) : incidents;
+  const scopedRequests = isBrgyOfficial ? requests.filter((r) => r.barangay === user!.barangay) : requests;
+  const scopedHouseholds = isBrgyOfficial ? households.filter((h) => h.barangay === user!.barangay) : households;
+  const currentNav = user && canAccessPage(user.role, activeNav as PageName) ? activeNav : "";
+
   if (!user || window.location.hash === "#login") {
     return (
       <LoginPage
@@ -249,7 +276,7 @@ function MainAppShell() {
         setActiveNav={setActiveNav}
         mobileNav={mobileNav}
         setMobileNav={setMobileNav}
-        incidentCount={incidents.filter((i) => i.status !== "Resolved").length}
+        incidentCount={scopedIncidents.filter((i) => i.status !== "Resolved").length}
       />
 
       <main>
@@ -262,9 +289,10 @@ function MainAppShell() {
           lastSync={lastSync}
           setLastSync={setLastSync}
           onClearData={handleClearAllData}
+          onRestoreData={handleRestoreDemoData}
         />
 
-        {activeNav === "Command Center" && (
+        {currentNav === "Command Center" && (
           <DashboardPage
             incidents={incidents}
             batches={batches}
@@ -279,11 +307,11 @@ function MainAppShell() {
           />
         )}
 
-        {activeNav === "Incidents & Needs" && (
+        {currentNav === "Incidents & Needs" && (
           <IncidentsPage
-            incidents={incidents}
+            incidents={scopedIncidents}
             setIncidents={setIncidents}
-            reliefRequests={requests}
+            reliefRequests={scopedRequests}
             setReliefRequests={setRequests}
             onOpenNewIncident={() => setModal("incident")}
             notify={notify}
@@ -291,7 +319,7 @@ function MainAppShell() {
           />
         )}
 
-        {activeNav === "Relief Tracking" && (
+        {currentNav === "Relief Tracking" && (
           <ReliefTrackingPage
             batches={batches}
             setBatches={setBatches}
@@ -302,7 +330,7 @@ function MainAppShell() {
           />
         )}
 
-        {activeNav === "Warehouse" && (
+        {currentNav === "Warehouse" && (
           <WarehousePage
             inventory={inventory}
             setInventory={setInventory}
@@ -313,7 +341,7 @@ function MainAppShell() {
           />
         )}
 
-        {activeNav === "Verification" && (
+        {currentNav === "Verification" && (
           <VerificationPage
             batches={batches}
             setBatches={setBatches}
@@ -326,9 +354,9 @@ function MainAppShell() {
           />
         )}
 
-        {activeNav === "Beneficiaries" && (
+        {currentNav === "Beneficiaries" && (
           <BeneficiariesPage
-            households={households}
+            households={scopedHouseholds}
             setHouseholds={setHouseholds}
             distributions={distributions}
             notify={notify}
@@ -336,7 +364,7 @@ function MainAppShell() {
           />
         )}
 
-        {activeNav === "Reports & DROMIC" && (
+        {currentNav === "Reports & DROMIC" && (
           <ReportsPage
             incidents={incidents}
             batches={batches}
@@ -348,7 +376,7 @@ function MainAppShell() {
           />
         )}
 
-        {activeNav === "Audit Log" && (
+        {currentNav === "Audit Log" && (
           <AuditLogPage logs={logs} setLogs={setLogs} notify={notify} />
         )}
       </main>
@@ -366,15 +394,15 @@ function MainAppShell() {
             <div className="form-grid">
               <label>
                 <span>Target Barangay</span>
-                <select name="barangay" required defaultValue="San Roque">
-                  <option value="San Roque">San Roque</option>
-                  <option value="Mapangpang">Mapangpang</option>
-                  <option value="Poblacion East">Poblacion East</option>
-                  <option value="Agupalo Este">Agupalo Este</option>
-                  <option value="Balbalungao">Balbalungao</option>
-                  <option value="San Isidro">San Isidro</option>
-                  <option value="Burgos">Burgos</option>
-                  <option value="Sto. Domingo">Sto. Domingo</option>
+                <select name="barangay" required defaultValue={user.barangay ?? "San Roque"}>
+                  <option value="San Roque" disabled={isBrgyOfficial && user.barangay !== "San Roque"}>San Roque</option>
+                  <option value="Mapangpang" disabled={isBrgyOfficial && user.barangay !== "Mapangpang"}>Mapangpang</option>
+                  <option value="Poblacion East" disabled={isBrgyOfficial && user.barangay !== "Poblacion East"}>Poblacion East</option>
+                  <option value="Agupalo Este" disabled={isBrgyOfficial && user.barangay !== "Agupalo Este"}>Agupalo Este</option>
+                  <option value="Balbalungao" disabled={isBrgyOfficial && user.barangay !== "Balbalungao"}>Balbalungao</option>
+                  <option value="San Isidro" disabled={isBrgyOfficial && user.barangay !== "San Isidro"}>San Isidro</option>
+                  <option value="Burgos" disabled={isBrgyOfficial && user.barangay !== "Burgos"}>Burgos</option>
+                  <option value="Sto. Domingo" disabled={isBrgyOfficial && user.barangay !== "Sto. Domingo"}>Sto. Domingo</option>
                 </select>
               </label>
               <label>

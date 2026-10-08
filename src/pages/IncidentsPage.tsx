@@ -3,6 +3,7 @@ import { Icon } from "../components/Icon";
 import { Incident, ReliefRequest, HazardType, IncidentSeverity } from "../data/types";
 import { LUPAO_BARANGAYS } from "../data/barangays";
 import { useAuth } from "../hooks/useAuth";
+import { canReviewIncidents } from "../data/permissions";
 
 interface IncidentsPageProps {
   incidents: Incident[];
@@ -24,6 +25,7 @@ export function IncidentsPage({
   logAction,
 }: IncidentsPageProps) {
   const { user } = useAuth();
+  const canReview = !!user && canReviewIncidents(user.role);
   const [activeTab, setActiveTab] = useState<"incidents" | "requests">(() => {
     return window.location.hash.includes("requests") ? "requests" : "incidents";
   });
@@ -255,7 +257,7 @@ export function IncidentsPage({
                     </td>
                     <td>
                       <div className="action-button-cluster">
-                        {inc.status === "For validation" && (
+                        {canReview && inc.status === "For validation" && (
                           <button
                             className="action-btn-small approve"
                             onClick={() => updateIncidentStatus(inc.id, "Approved")}
@@ -264,7 +266,7 @@ export function IncidentsPage({
                             Approve
                           </button>
                         )}
-                        {inc.status === "Approved" && (
+                        {canReview && inc.status === "Approved" && (
                           <button
                             className="action-btn-small resolve"
                             onClick={() => updateIncidentStatus(inc.id, "Resolved")}
@@ -346,7 +348,7 @@ export function IncidentsPage({
                     </td>
                     <td>
                       <div className="action-button-cluster">
-                        {req.status === "Pending" && (
+                        {canReview && req.status === "Pending" && (
                           <>
                             <button
                               className="action-btn-small approve"
@@ -364,7 +366,7 @@ export function IncidentsPage({
                             </button>
                           </>
                         )}
-                        {req.status === "Approved" && (
+                        {canReview && req.status === "Approved" && (
                           <button
                             className="action-btn-small fulfill"
                             onClick={() => updateRequestStatus(req.id, "Fulfilled")}

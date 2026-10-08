@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Icon } from "../components/Icon";
 import { ReliefBatch, Household, BeneficiaryDistribution } from "../data/types";
+import { ROLE_VERIFY_MODES } from "../data/permissions";
 import { useAuth } from "../hooks/useAuth";
 
 interface VerificationPageProps {
@@ -27,10 +28,12 @@ export function VerificationPage({
   logAction,
 }: VerificationPageProps) {
   const { user } = useAuth();
+  const allowedModes: VerifyMode[] = user ? ROLE_VERIFY_MODES[user.role] : [];
   const [mode, setMode] = useState<VerifyMode>(() => {
-    if (window.location.hash.includes("warehouse")) return "warehouse-release";
-    if (window.location.hash.includes("reception")) return "barangay-reception";
-    return "beneficiary-handout";
+    let wanted: VerifyMode = "beneficiary-handout";
+    if (window.location.hash.includes("warehouse")) wanted = "warehouse-release";
+    else if (window.location.hash.includes("reception")) wanted = "barangay-reception";
+    return allowedModes.includes(wanted) ? wanted : allowedModes[0] ?? wanted;
   });
   const [inputCode, setInputCode] = useState(households[0]?.qrCode || "");
   const [selectedBatchId, setSelectedBatchId] = useState(batches[0]?.id || "");
@@ -150,6 +153,7 @@ export function VerificationPage({
 
       {/* Mode Selector Tabs */}
       <div className="tabs-header-bar">
+        {allowedModes.includes("beneficiary-handout") && (
         <button
           className={`tab-switch-btn ${mode === "beneficiary-handout" ? "active" : ""}`}
           onClick={() => {
@@ -161,6 +165,8 @@ export function VerificationPage({
           <Icon name="users" size={16} />
           <span>Beneficiary Handout (Anti-Duplication)</span>
         </button>
+        )}
+        {allowedModes.includes("warehouse-release") && (
         <button
           className={`tab-switch-btn ${mode === "warehouse-release" ? "active" : ""}`}
           onClick={() => {
@@ -172,6 +178,8 @@ export function VerificationPage({
           <Icon name="box" size={16} />
           <span>Warehouse Release (Stage 1→2)</span>
         </button>
+        )}
+        {allowedModes.includes("barangay-reception") && (
         <button
           className={`tab-switch-btn ${mode === "barangay-reception" ? "active" : ""}`}
           onClick={() => {
@@ -183,6 +191,7 @@ export function VerificationPage({
           <Icon name="truck" size={16} />
           <span>Barangay Reception (Stage 2→3)</span>
         </button>
+        )}
       </div>
 
       <div className="verification-layout-grid">

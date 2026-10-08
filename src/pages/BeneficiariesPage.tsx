@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Icon } from "../components/Icon";
 import { Household, BeneficiaryDistribution } from "../data/types";
+import { useAuth } from "../hooks/useAuth";
+import { canEditHouseholds } from "../data/permissions";
 import { LUPAO_BARANGAYS, EVACUATION_CENTERS } from "../data/barangays";
 
 interface BeneficiariesPageProps {
@@ -18,6 +20,7 @@ export function BeneficiariesPage({
   notify,
   logAction,
 }: BeneficiariesPageProps) {
+  const { user } = useAuth();
   const [selectedBarangay, setSelectedBarangay] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -86,9 +89,11 @@ export function BeneficiariesPage({
             Master registry of vulnerable households, disaster evacuation center assignments, and individual relief entitlement history.
           </p>
         </div>
-        <button className="primary-button" onClick={() => setShowRegisterModal(true)}>
-          <Icon name="plus" size={16} /> Register Affected Household
-        </button>
+        {user && canEditHouseholds(user.role) && (
+          <button className="primary-button" onClick={() => setShowRegisterModal(true)}>
+            <Icon name="plus" size={16} /> Register Affected Household
+          </button>
+        )}
       </div>
 
       {/* KPI Stats */}

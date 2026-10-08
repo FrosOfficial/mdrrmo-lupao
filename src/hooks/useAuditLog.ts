@@ -3,7 +3,7 @@ import { AuditLog, User } from "../data/types";
 import { INITIAL_AUDIT_LOGS } from "../data/mock-data";
 
 export function useAuditLog(currentUser: User | null) {
-  const [logs, setLogs] = useLocalStorage<AuditLog[]>("lupao-audit-logs", INITIAL_AUDIT_LOGS);
+  const [logs, setLogs] = useLocalStorage<AuditLog[]>("lupao-demo-audit-logs", INITIAL_AUDIT_LOGS);
 
   const addLog = (action: string, module: string, details: string) => {
     const newLog: AuditLog = {

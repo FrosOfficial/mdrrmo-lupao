@@ -3,6 +3,7 @@ import { Icon } from "./Icon";
 import { Logo } from "./Logo";
 import { useAuth } from "../hooks/useAuth";
 import { DEMO_USERS } from "../data/mock-data";
+import { ROLE_PAGES, PageName } from "../data/permissions";
 
 interface SidebarProps {
   activeNav: string;
@@ -70,7 +71,9 @@ export function Sidebar({
 
       <nav aria-label="Main navigation">
         <p className="nav-label">WORKSPACE</p>
-        {navItems.map((item) => (
+        {navItems
+          .filter((item) => !user || ROLE_PAGES[user.role].includes(item.id as PageName))
+          .map((item) => (
           <button
             key={item.id}
             className={activeNav === item.id ? "active" : ""}
